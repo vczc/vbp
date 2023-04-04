@@ -84,7 +84,7 @@ class Screencast extends React.Component<any, any> {
           onMouseUp={this.handleMouseEvent}
           onMouseMove={this.handleMouseEvent}
           onClick={this.handleMouseEvent}
-          // onDoubleClick={this.handleMouseEvent}
+          onDoubleClick={this.handleMouseEvent}
           onWheel={this.handleMouseEvent}
           onKeyDown={this.handleKeyEvent}
           onKeyUp={this.handleKeyEvent}
@@ -392,7 +392,8 @@ class Screencast extends React.Component<any, any> {
       mousedown: 'mousePressed',
       mouseup: 'mouseReleased',
       mousemove: 'mouseMoved',
-      wheel: 'mouseWheel'
+      wheel: 'mouseWheel',
+      dblclick: 'dblclick'
     };
 
     if (!(event.type in types)) {
@@ -418,6 +419,17 @@ class Screencast extends React.Component<any, any> {
       deltaX: 0,
       deltaY: 0
     };
+
+    // 处理双击无效 模拟按下抬起并将点击次数设为2
+    if (type === 'dblclick') {
+      params.clickCount = 2;
+      params.type = 'mousePressed';
+      this.props.onInteraction('Input.dispatchMouseEvent', params);
+
+      params.type = 'mouseReleased';
+      this.props.onInteraction('Input.dispatchMouseEvent', params);
+      return;
+    }
 
     if (type === 'mouseWheel') {
       params.deltaX = event.deltaX / this.viewportMetadata.screenZoom;
