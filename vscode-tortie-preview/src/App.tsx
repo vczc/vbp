@@ -93,10 +93,12 @@ class App extends React.Component<any, IState> {
 
     this.connection.enableVerboseLogging(this.state.isVerboseMode);
 
+    // 当发生相同文档导航时触发，例如由于历史记录 API 使用或锚点导航
     this.connection.on('Page.navigatedWithinDocument', (result: any) => {
       this.requestNavigationHistory();
     });
 
+    // 在帧导航完成后触发。帧现在与新加载程序关联
     this.connection.on('Page.frameNavigated', (result: any) => {
       const { frame } = result;
       var isMainFrame = !frame.parentId;
@@ -114,6 +116,7 @@ class App extends React.Component<any, IState> {
       }
     });
 
+    // 加载事件触发
     this.connection.on('Page.loadEventFired', (result: any) => {
       this.updateState({
         ...this.state,
@@ -135,16 +138,19 @@ class App extends React.Component<any, IState> {
       }, 500);
     });
 
+    // 开始截屏视频请求的压缩图像数据
     this.connection.on('Page.screencastFrame', (result: any) => {
       this.handleScreencastFrame(result);
     });
 
+    // 当要打开新窗口时触发，通过 window.open（）、链接单击、表单提交等
     this.connection.on('Page.windowOpen', (result: any) => {
       this.connection.send('extension.windowOpenRequested', {
         url: result.url
       });
     });
 
+    // 当 JavaScript 发起的对话框（警报、确认、提示或 onbeforeunload）即将打开时触发
     this.connection.on('Page.javascriptDialogOpening', (result: any) => {
       const { url, message, type } = result;
 
@@ -155,6 +161,7 @@ class App extends React.Component<any, IState> {
       });
     });
 
+    // 帧大小变化时
     this.connection.on('Page.frameResized', (result: any) => {
       this.stopCasting();
       this.startCasting();
@@ -179,7 +186,8 @@ class App extends React.Component<any, IState> {
 
       this.updateState({
         isVerboseMode: payload.isVerboseMode ? payload.isVerboseMode : false,
-        url: payload.startUrl ? payload.startUrl : 'about:blank',
+        // url: payload.startUrl ? payload.startUrl : 'about:blank',
+        url: payload.startUrl ? payload.startUrl : 'https://news.baidu.com/',
         format: payload.format ? payload.format : 'jpeg'
       });
 
@@ -209,6 +217,9 @@ class App extends React.Component<any, IState> {
     this.cdpHelper = new CDPHelper(this.connection);
   }
 
+  /***
+   * @description 处理截屏视频的压缩图像相关数据
+   */
   private handleScreencastFrame(result: any) {
     const { sessionId, data, metadata } = result;
     this.connection.send('Page.screencastFrameAck', { sessionId });
@@ -235,6 +246,7 @@ class App extends React.Component<any, IState> {
     this.connection.enableVerboseLogging(isVerboseMode);
   }
 
+  // 发送状态机
   private sendStatetoHost() {
     this.connection.send('extension.appStateChanged', {
       state: this.state
@@ -269,10 +281,12 @@ class App extends React.Component<any, IState> {
     );
   }
 
+  // 停止发送截屏视屏帧的每个帧
   public stopCasting() {
     this.connection.send('Page.stopScreencast');
   }
 
+  // 开始适用截屏视频帧事件发送每个帧
   public startCasting() {
     var params = {
       quality: 80,
@@ -292,6 +306,7 @@ class App extends React.Component<any, IState> {
     this.connection.send('Page.startScreencast', params);
   }
 
+  // 请求导航历史记录
   private async requestNavigationHistory() {
     const history: any = await this.connection.send('Page.getNavigationHistory');
 
@@ -326,6 +341,7 @@ class App extends React.Component<any, IState> {
     });
   }
 
+  // 视口发生变化时执行对应副作用
   private async onViewportChanged(action: string, data: any) {
     switch (action) {
       case 'inspectHighlightRequested':
@@ -395,6 +411,7 @@ class App extends React.Component<any, IState> {
     }
   }
 
+  // 异步更新数据并执行副作用
   private async updateState(newState: any) {
     return new Promise((resolve, reject) => {
       this.setState(newState, () => {
@@ -404,6 +421,7 @@ class App extends React.Component<any, IState> {
     });
   }
 
+  // 句柄检查突出显示请求
   private async handleInspectHighlightRequested(data: any) {
     let highlightNodeInfo: any = await this.connection.send('DOM.getNodeForLocation', {
       x: data.params.position.x,
@@ -455,6 +473,7 @@ class App extends React.Component<any, IState> {
   //   });
   // }
 
+  // 解析突出显示节点源元数据
   private async resolveHighlightNodeSourceMetadata() {
     if (!this.state.viewportMetadata.highlightNode) {
       return;
@@ -495,6 +514,7 @@ class App extends React.Component<any, IState> {
     }
   }
 
+  // 处理检查元素请求
   private async handleInspectElementRequest(data: any) {
     if (!this.state.viewportMetadata.highlightNode) {
       return;
@@ -522,6 +542,7 @@ class App extends React.Component<any, IState> {
     }
   }
 
+  // 在工具栏上调用操作
   private onToolbarActionInvoked(action: string, data: any): Promise<any> {
     switch (action) {
       case 'forward':
@@ -558,6 +579,7 @@ class App extends React.Component<any, IState> {
     return Promise.resolve();
   }
 
+  // 处理切换检查
   private handleToggleInspect() {
     if (this.state.isInspectEnabled) {
       // Hide browser highlight
@@ -579,6 +601,7 @@ class App extends React.Component<any, IState> {
     }
   }
 
+  // 处理url变化
   private handleUrlChange(data: any) {
     this.connection.send('Page.navigate', {
       url: data.url
@@ -589,6 +612,7 @@ class App extends React.Component<any, IState> {
     });
   }
 
+  // 处理设备视口大小改变
   private handleViewportSizeChange(data: any) {
     this.onViewportChanged('size', {
       width: data.width,
@@ -596,6 +620,7 @@ class App extends React.Component<any, IState> {
     });
   }
 
+  // 处理设备视口改变
   private handleViewportDeviceChange(data: any) {
     let isResizable = data.device.name === 'Responsive';
     let isFixedSize = data.device.name !== 'Responsive';
@@ -615,6 +640,7 @@ class App extends React.Component<any, IState> {
     });
   }
 
+  // 切换设备仿真
   private handleToggleDeviceEmulation() {
     if (this.state.isDeviceEmulationEnabled) {
       this.disableViewportDeviceEmulation();
@@ -623,6 +649,7 @@ class App extends React.Component<any, IState> {
     }
   }
 
+  // 禁用视口设备仿真
   private disableViewportDeviceEmulation() {
     console.log('app.disableViewportDeviceEmulation');
     this.handleViewportDeviceChange({
@@ -655,6 +682,7 @@ class App extends React.Component<any, IState> {
     });
   }
 
+  // 处理剪切版写入
   private handleClipboardWrite(data: any) {
     // overwrite the clipboard only if there is a valid value
     if (data && (data as any).value) {
@@ -662,7 +690,9 @@ class App extends React.Component<any, IState> {
     }
   }
 
+  // 处理元素改变
   private async handleElementChanged(data: any) {
+    // 返回给定位置的节点id
     const nodeInfo: any = await this.connection.send('DOM.getNodeForLocation', {
       x: data.params.position.x,
       y: data.params.position.y
@@ -679,6 +709,7 @@ class App extends React.Component<any, IState> {
     });
   }
 
+  // 请求节点突出显示
   private async requestNodeHighlighting() {
     if (this.state.viewportMetadata.highlightNode) {
       let nodeId = this.state.viewportMetadata.highlightNode.nodeId;

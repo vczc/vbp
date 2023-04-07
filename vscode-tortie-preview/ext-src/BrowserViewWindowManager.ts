@@ -19,8 +19,8 @@ export class BrowserViewWindowManager extends EventEmitter.EventEmitter2 {
     this.telemetry = telemetry;
     this.defaultConfig = {
       extensionPath: extensionPath,
-      // startUrl: 'http://code.visualstudio.com',
-      startUrl: 'http://127.0.0.1:15000/',
+      startUrl: 'https://news.baidu.com/',
+      // startUrl: 'http://127.0.0.1:15000/',
       format: 'jpeg',
       columnNumber: 2
     };

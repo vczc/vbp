@@ -63,6 +63,7 @@ class Screencast extends React.Component<any, any> {
     }
   }
 
+  // 渲染循环
   public renderLoop() {
     this.renderFrame();
     this.frameId = window.requestAnimationFrame(this.renderLoop); // Set up next iteration of the loop
@@ -95,6 +96,7 @@ class Screencast extends React.Component<any, any> {
     );
   }
 
+  // 渲染canvas
   private renderFrame() {
     if (!this.canvasRef.current || !this.imageRef.current) {
       return;
@@ -187,6 +189,7 @@ class Screencast extends React.Component<any, any> {
     }
   }
 
+  // 渲染截屏帧
   public renderScreencastFrame() {
     const screencastFrame = this.props.frame;
     const imageElement = this.imageRef.current;
@@ -218,6 +221,7 @@ class Screencast extends React.Component<any, any> {
     }
   }
 
+  // 获取棋盘图案
   private getCheckerboardPattern(canvas: HTMLCanvasElement, context: CanvasRenderingContext2D): CanvasPattern {
     const pattern = canvas;
     const size = 32;
@@ -246,6 +250,7 @@ class Screencast extends React.Component<any, any> {
     }
   }
 
+  // 处理鼠标事件
   private handleMouseEvent(event: any) {
     if (this.props.isInspectEnabled) {
       if (event.type === 'click') {
@@ -277,6 +282,7 @@ class Screencast extends React.Component<any, any> {
     }
   }
 
+  // 转为屏幕空间
   private convertIntoScreenSpace(event: any, state: any) {
     let screenOffsetTop = 0;
     if (this.canvasRef && this.canvasRef.current) {
@@ -289,6 +295,7 @@ class Screencast extends React.Component<any, any> {
     };
   }
 
+  // 绘制路径
   private quadToPath(context: any, quad: any) {
     context.beginPath();
     context.moveTo(quad[0], quad[1]);
@@ -299,6 +306,7 @@ class Screencast extends React.Component<any, any> {
     return context;
   }
 
+  // 绘制轮廓四边形
   private drawOutlinedQuad(context: any, quad: any, fillColor: any) {
     context.lineWidth = 2;
     this.quadToPath(context, quad).clip();
@@ -306,6 +314,7 @@ class Screencast extends React.Component<any, any> {
     context.fill();
   }
 
+  // 剪辑绘制轮廓四边形
   private drawOutlinedQuadWithClip(context: any, quad: any, clipQuad: any, fillColor: any) {
     context.fillStyle = fillColor;
     context.lineWidth = 0;
@@ -315,6 +324,7 @@ class Screencast extends React.Component<any, any> {
     this.quadToPath(context, clipQuad).fill();
   }
 
+  // 将盒子模型缩放到视口
   private scaleBoxModelToViewport(model: any) {
     let zoomFactor = this.viewportMetadata.screenZoom;
     let offsetTop = this.state.screenOffsetTop;
@@ -334,6 +344,7 @@ class Screencast extends React.Component<any, any> {
     return model;
   }
 
+  // 处理键盘事件
   private handleKeyEvent(event: any) {
     this.emitKeyEvent(event.nativeEvent);
 
@@ -350,6 +361,7 @@ class Screencast extends React.Component<any, any> {
     return (event.altKey ? 1 : 0) | (event.ctrlKey ? 2 : 0) | (event.metaKey ? 4 : 0) | (event.shiftKey ? 8 : 0);
   }
 
+  // 派发键盘事件
   private emitKeyEvent(event: any) {
     let type;
     switch (event.type) {
@@ -385,6 +397,7 @@ class Screencast extends React.Component<any, any> {
     this.props.onInteraction('Input.dispatchKeyEvent', params);
   }
 
+  // 想chromium派发鼠标事件
   private dispatchMouseEvent(event: any) {
     let clickCount = 0;
     const buttons = { 0: 'none', 1: 'left', 2: 'middle', 3: 'right' };

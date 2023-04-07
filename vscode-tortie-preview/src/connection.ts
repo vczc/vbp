@@ -18,6 +18,7 @@ export default class Connection extends EventEmitter2 {
     });
   }
 
+  // 通过vscode调用chrome开发工具协议api    链接： https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-startScreencast
   send<T>(method: string, params = {}): Promise<T> {
     const id = ++this.lastId;
 
@@ -45,6 +46,7 @@ export default class Connection extends EventEmitter2 {
     });
   }
 
+  // 打印消息or传递消息
   onMessage(message: any) {
     const object: any = message.data;
 
@@ -68,6 +70,7 @@ export default class Connection extends EventEmitter2 {
     }
   }
 
+  // 是否启用详细日志记录
   enableVerboseLogging(verbose: boolean) {
     if (verbose) {
       this.logger.enable();
