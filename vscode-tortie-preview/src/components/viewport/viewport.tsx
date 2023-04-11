@@ -30,7 +30,6 @@ class Viewport extends React.Component<any, any> {
     this.handleScreencastInteraction = this.handleScreencastInteraction.bind(this);
     this.handleResizeStop = this.handleResizeStop.bind(this);
     this.handleMouseMoved = this.handleMouseMoved.bind(this);
-    this.handleContextMenu = this.handleContextMenu.bind(this);
   }
 
   public componentDidMount() {
@@ -74,10 +73,13 @@ class Viewport extends React.Component<any, any> {
 
     let renderer = (
       <Screencast
-        height={height}
-        width={width}
+        height={height - (this.props.scrollWidth > this.props.viewport.width ? 12 : 0)}
+        width={width - (this.props.scrollHeight > this.props.viewport.height ? 12 : 0)}
+        scrollHeight={this.props.scrollHeight}
+        scrollWidth={this.props.scrollWidth}
         frame={this.props.frame}
         format={this.props.format}
+        viewport={this.props.viewport}
         viewportMetadata={this.viewportMetadata}
         isInspectEnabled={this.props.isInspectEnabled}
         onInspectElement={this.handleInspectElement}
@@ -91,7 +93,6 @@ class Viewport extends React.Component<any, any> {
       <div
         className={`viewport ` + (this.props.isDeviceEmulationEnabled ? `viewport-resizable` : ``)}
         ref={this.viewportRef}
-        onContextMenu={this.handleContextMenu}
       >
         <Loading percent={this.viewportMetadata.loadingPercent} />
         <ViewportInfo height={this.viewportMetadata.height} width={this.viewportMetadata.width} />
@@ -101,6 +102,7 @@ class Viewport extends React.Component<any, any> {
             width: width,
             height: height
           }}
+          style={{ display: 'flex', flexDirection: 'column' }}
           onResizeStop={this.handleResizeStop}
           enable={resizableEnableOptions}
           handleClasses={{
@@ -120,12 +122,14 @@ class Viewport extends React.Component<any, any> {
     );
   }
 
+  // 计算视口
   public calculateViewport() {
     console.log('viewport.calculateViewport');
     this.calculateViewportSize();
     this.calculateViewportZoom();
   }
 
+  // 计算视口缩放
   private calculateViewportZoom() {
     let screenZoom = 1;
 
@@ -164,6 +168,7 @@ class Viewport extends React.Component<any, any> {
     });
   }
 
+  // 计算视口大小
   private calculateViewportSize() {
     if (this.viewportMetadata.isFixedSize) {
       return;
@@ -200,14 +205,18 @@ class Viewport extends React.Component<any, any> {
     }
   }
 
+  // 处理视口调整大小
   private handleViewportResize() {
     console.log('viewport.handleViewportResize');
     this.calculateViewport();
   }
-  private handleContextMenu(e: React.MouseEvent<HTMLInputElement>) {
-    e.preventDefault();
-  }
 
+  // 处理上下文菜单
+  // private handleContextMenu(e: React.MouseEvent<HTMLInputElement>) {
+  //   e.preventDefault();
+  // }
+
+  // 处理停止调整大小
   private handleResizeStop(e: any, direction: any, ref: any, delta: any) {
     this.emitViewportChanges({
       width: this.viewportMetadata.width + delta.width,
@@ -216,18 +225,21 @@ class Viewport extends React.Component<any, any> {
     });
   }
 
+  // 处理检查元素
   private handleInspectElement(params: object) {
     this.props.onViewportChanged('inspectElement', {
       params: params
     });
   }
 
+  // 处理检查高亮请求
   private handleInspectHighlightRequested(params: object) {
     this.props.onViewportChanged('inspectHighlightRequested', {
       params: params
     });
   }
 
+  // 处理截屏交互
   private handleScreencastInteraction(action: string, params: object) {
     this.props.onViewportChanged('interaction', {
       action: action,
@@ -235,16 +247,19 @@ class Viewport extends React.Component<any, any> {
     });
   }
 
+  // 处理鼠标移动
   private handleMouseMoved(params: object) {
     this.props.onViewportChanged('hoverElementChanged', {
       params: params
     });
   }
 
+  // 向下取整
   private roundNumber(value: number) {
     return Math.floor(value);
   }
 
+  // 发射视口改变
   private emitViewportChanges(newViewport: any) {
     this.props.onViewportChanged('size', newViewport);
   }

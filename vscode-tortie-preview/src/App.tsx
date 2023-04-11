@@ -27,6 +27,8 @@ interface IState {
     canGoBack: boolean;
     canGoForward: boolean;
   };
+  scrollHeight: Number;
+  scrollWidth: Number;
 }
 
 interface IViewport {
@@ -84,7 +86,9 @@ class App extends React.Component<any, IState> {
         screenZoom: 1,
         scrollOffsetX: 0,
         scrollOffsetY: 0
-      }
+      },
+      scrollHeight: 0,
+      scrollWidth: 0
     };
 
     this.connection = new Connection();
@@ -186,8 +190,7 @@ class App extends React.Component<any, IState> {
 
       this.updateState({
         isVerboseMode: payload.isVerboseMode ? payload.isVerboseMode : false,
-        // url: payload.startUrl ? payload.startUrl : 'about:blank',
-        url: payload.startUrl ? payload.startUrl : 'https://news.baidu.com/',
+        url: payload.startUrl ? payload.startUrl : 'about:blank',
         format: payload.format ? payload.format : 'jpeg'
       });
 
@@ -217,12 +220,15 @@ class App extends React.Component<any, IState> {
     this.cdpHelper = new CDPHelper(this.connection);
   }
 
-  /***
-   * @description 处理截屏视频的压缩图像相关数据
-   */
+  // 处理截屏视频的压缩图像相关数据
   private handleScreencastFrame(result: any) {
     const { sessionId, data, metadata } = result;
     this.connection.send('Page.screencastFrameAck', { sessionId });
+
+    this.connection.send('Page.getLayoutMetrics').then((result: any) => {
+      const { width, height } = result.cssContentSize;
+      this.setState({ scrollHeight: height, scrollWidth: width });
+    });
 
     this.requestNodeHighlighting();
 
@@ -267,6 +273,8 @@ class App extends React.Component<any, IState> {
         />
         <Viewport
           viewport={this.state.viewportMetadata}
+          scrollHeight={this.state.scrollHeight}
+          scrollWidth={this.state.scrollWidth}
           isInspectEnabled={this.state.isInspectEnabled}
           isDeviceEmulationEnabled={this.state.isDeviceEmulationEnabled}
           frame={this.state.frame}

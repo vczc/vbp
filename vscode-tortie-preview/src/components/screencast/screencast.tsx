@@ -1,5 +1,6 @@
 import * as React from 'react';
 import './screencast.css';
+import ScrollBar from '../scroll-bar/scroll-bar';
 
 // This implementation is heavily inspired by https://cs.chromium.org/chromium/src/third_party/blink/renderer/devtools/front_end/screencast/ScreencastView.js
 
@@ -10,6 +11,9 @@ class Screencast extends React.Component<any, any> {
   private frameId: number | null;
   private frame: string | null;
   private viewportMetadata: any;
+  private pageX: Number;
+  private pageY: Number;
+  private isScroll: Boolean;
 
   constructor(props: any) {
     super(props);
@@ -27,6 +31,9 @@ class Screencast extends React.Component<any, any> {
       imageZoom: 1,
       screenOffsetTop: 0
     };
+    this.pageX = 0;
+    this.pageY = 0;
+    this.isScroll = false;
   }
 
   static getDerivedStateFromProps(nextProps: any, prevState: any) {
@@ -70,28 +77,54 @@ class Screencast extends React.Component<any, any> {
   }
 
   public render() {
-    let canvasStyle = {
-      cursor: this.viewportMetadata ? this.viewportMetadata.cursor : 'auto'
-    };
+    const { width, height, viewport, scrollWidth, scrollHeight } = this.props;
+    const canvasStyle = { cursor: this.viewportMetadata ? this.viewportMetadata.cursor : 'auto' };
 
     return (
       <>
-        <img ref={this.imageRef} className="img-hidden" />
-        <canvas
-          className="screencast"
-          style={canvasStyle}
-          ref={this.canvasRef}
-          onMouseDown={this.handleMouseEvent}
-          onMouseUp={this.handleMouseEvent}
-          onMouseMove={this.handleMouseEvent}
-          onClick={this.handleMouseEvent}
-          onDoubleClick={this.handleMouseEvent}
-          onWheel={this.handleMouseEvent}
-          onKeyDown={this.handleKeyEvent}
-          onKeyUp={this.handleKeyEvent}
-          onKeyPress={this.handleKeyEvent}
-          tabIndex={0}
-        />
+        <div style={{ height: `100%;`, width: `100%`, display: 'flex' }}>
+          <img ref={this.imageRef} className="img-hidden" />
+          <canvas
+            className="screencast"
+            style={canvasStyle}
+            ref={this.canvasRef}
+            onMouseDown={this.handleMouseEvent}
+            onMouseUp={this.handleMouseEvent}
+            onMouseMove={this.handleMouseEvent}
+            onClick={this.handleMouseEvent}
+            onDoubleClick={this.handleMouseEvent}
+            onWheel={this.handleMouseEvent}
+            onKeyDown={this.handleKeyEvent}
+            onKeyUp={this.handleKeyEvent}
+            onKeyPress={this.handleKeyEvent}
+            tabIndex={0}
+          />
+          {this.props.scrollHeight > this.props.viewport.height && (
+            <ScrollBar
+              axis="y"
+              width={width}
+              height={height}
+              viewport={viewport}
+              scrollWidth={scrollWidth}
+              scrollHeight={scrollHeight}
+              dispatchMouseEvent={this.dispatchMouseEvent}
+              handleMouseEvent={this.handleMouseEvent}
+            />
+          )}
+        </div>
+
+        {this.props.scrollWidth > this.props.viewport.width && (
+          <ScrollBar
+            axis="x"
+            width={width}
+            height={height}
+            viewport={viewport}
+            scrollWidth={scrollWidth}
+            scrollHeight={scrollHeight}
+            dispatchMouseEvent={this.dispatchMouseEvent}
+            handleMouseEvent={this.handleMouseEvent}
+          />
+        )}
       </>
     );
   }
@@ -398,7 +431,7 @@ class Screencast extends React.Component<any, any> {
   }
 
   // 想chromium派发鼠标事件
-  private dispatchMouseEvent(event: any) {
+  public dispatchMouseEvent = (event: any) => {
     let clickCount = 0;
     const buttons = { 0: 'none', 1: 'left', 2: 'middle', 3: 'right' };
     const types = {
@@ -435,12 +468,7 @@ class Screencast extends React.Component<any, any> {
 
     // 处理双击无效 模拟按下抬起并将点击次数设为2
     if (type === 'dblclick') {
-      params.clickCount = 2;
-      params.type = 'mousePressed';
-      this.props.onInteraction('Input.dispatchMouseEvent', params);
-
-      params.type = 'mouseReleased';
-      this.props.onInteraction('Input.dispatchMouseEvent', params);
+      this.mockDoubleClick(params);
       return;
     }
 
@@ -450,7 +478,17 @@ class Screencast extends React.Component<any, any> {
     }
 
     this.props.onInteraction('Input.dispatchMouseEvent', params);
-  }
+  };
+
+  // 模拟双击操作
+  mockDoubleClick = (params: any) => {
+    params.clickCount = 2;
+    params.type = 'mousePressed';
+    this.props.onInteraction('Input.dispatchMouseEvent', params);
+
+    params.type = 'mouseReleased';
+    this.props.onInteraction('Input.dispatchMouseEvent', params);
+  };
 }
 
 export default Screencast;

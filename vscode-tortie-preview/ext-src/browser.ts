@@ -58,32 +58,38 @@ export default class Browser extends EventEmitter {
       this.chromeArgs.push('--no-sandbox');
     }
 
+    // 禁用GPU硬件加速
     this.chromeArgs.push('--disable-gpu');
+
+    // /dev/shm分区在某些虚拟机环境中太小，导致Chrome出现故障或崩溃（请参阅http://crbug.com/715363). 使用此标志可以解决此问题（将始终使用临时目录来创建匿名共享内存文件）
     this.chromeArgs.push('--disable-dev-shm-usage');
+
+    // 最大限度地启动浏览器，而不考虑以前的任何设置。↪
+    this.chromeArgs.push('--start-maximized');
 
     let extensionSettings = vscode.workspace.getConfiguration('browser-preview');
     let ignoreHTTPSErrors = extensionSettings.get<boolean>('ignoreHttpsErrors');
 
     this.browser = await puppeteer.launch({
-      headless: true,// 无头chrome模式
+      headless: true, // 无头chrome模式
       executablePath: chromePath,
       args: this.chromeArgs,
       // args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'],
-      ignoreHTTPSErrors
+      ignoreHTTPSErrors,
+      defaultViewport: null
     });
 
     const setup = async () => {
       this.browser = await puppeteer.launch({
-        headless: true,// 无头chrome模式
+        headless: true, // 无头chrome模式
         executablePath: chromePath,
         args: this.chromeArgs,
         // args: ['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'],
-        ignoreHTTPSErrors
+        ignoreHTTPSErrors,
+        defaultViewport: null
       });
       this.browser.on('disconnected', setup);
     };
-
-
   }
 
   public async newPage(): Promise<BrowserPage> {

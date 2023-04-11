@@ -1,3 +1,6 @@
 #!/bin/bash
-rm *.vsix
+if find . -name "*.vsix" -print -quit | grep -q .; then
+    rm *.vsix
+fi
+
 vsce package
