@@ -289,7 +289,7 @@ class App extends React.Component<any, IState> {
   // 开始适用截屏视频帧事件发送每个帧
   public startCasting() {
     var params = {
-      quality: 80,
+      quality: 100,
       format: this.state.format,
       maxWidth: 2000,
       maxHeight: 2000
